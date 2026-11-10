@@ -23,9 +23,6 @@ on:
         description: "Build Linux packages"
         type: boolean
         default: false
-  push:
-    tags:
-      - "dev_v*"
 
 jobs:
   resolve-targets:
