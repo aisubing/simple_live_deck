@@ -1,10 +1,7 @@
 name: app-build-action
-#鎺ㄩ€乀ag鏃惰Е鍙?
+# 仅手动触发（原来监听 dev_tv_v* tag，会和发布流程联动自动出包）
 on:
   workflow_dispatch:
-  push:
-    tags:
-      - "dev_tv_v*"
 jobs:
   build-tv:
     runs-on: macos-latest
