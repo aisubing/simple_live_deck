@@ -67,6 +67,9 @@ jobs:
           flutter_distributor package --platform linux --targets deb,zip --skip-clean \
             --hook-pre 'bash "${{ github.workspace }}/scripts/linux/inject_libmpv_runtime.sh" "$BUILD_OUTPUT_DIRECTORY"'
 
+      - name: Fix zip permissions
+        run: python3 scripts/linux/fix_zip_permissions.py simple_live_app/build/dist/*/*.zip
+
       - name: Verify bundled libmpv
         run: |
           set -e

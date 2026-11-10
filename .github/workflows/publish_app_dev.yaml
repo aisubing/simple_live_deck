@@ -311,6 +311,9 @@ jobs:
           cd simple_live_app
           flutter_distributor package --platform linux --targets deb,zip --skip-clean \
             --hook-pre 'bash "${{ github.workspace }}/scripts/linux/inject_libmpv_runtime.sh" "$BUILD_OUTPUT_DIRECTORY"'
+      # 修正 zip 内可执行文件权限
+      - name: Fix zip permissions
+        run: python3 scripts/linux/fix_zip_permissions.py simple_live_app/build/dist/*/*.zip
       # 确认 libmpv 已进入产物
       - name: Verify bundled libmpv
         run: |

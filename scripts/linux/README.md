@@ -44,6 +44,14 @@ error while loading shared libraries: libmpv.so.2: cannot open shared object fil
   scripts/linux/inject_libmpv_runtime.sh simple_live_app/build/linux/x64/release/bundle
   ```
 
+- `fix_zip_permissions.py`
+  修正 flutter_distributor 生成的 zip 内文件权限（默认全为 `0600`，解压后
+  应用不可执行）。
+
+  ```bash
+  python3 scripts/linux/fix_zip_permissions.py simple_live_app/build/dist/*/*.zip
+  ```
+
 ## CI
 
 `.github/workflows/publish_app_release_linux.yml` 和
@@ -52,7 +60,11 @@ error while loading shared libraries: libmpv.so.2: cannot open shared object fil
 1. 安装 `patchelf`，用 `actions/cache` 缓存运行时目录；
 2. 构建前执行 `fetch_libmpv_runtime.py`；
 3. `flutter_distributor` 使用 `--hook-pre` 调用注入脚本——钩子在
-   `flutter build` 之后、打包 deb/zip 之前执行，因此两个产物都自带运行库。
+   `flutter build` 之后、打包 deb/zip 之前执行，因此两个产物都自带运行库；
+4. 打包后执行 `fix_zip_permissions.py`：flutter_distributor 生成的 zip 会把
+   文件记成 `0600`（解压后不能直接运行），该脚本把 `simple_live_app` 修正为
+   `0755`、目录 `0755`、其余文件 `0644`；
+5. 最后校验 zip/deb 中都存在 `lib/libmpv.so.2`。
 
 本地用 `flutter_distributor` 打包时，同样加上钩子即可：
 
