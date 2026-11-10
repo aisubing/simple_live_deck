@@ -1,14 +1,13 @@
 name: discussion-poll-chart
 
 on:
+  # 仅手动触发：原来的 5 分钟定时已关闭
   workflow_dispatch:
     inputs:
       discussion_number:
         description: "Discussion number"
         type: number
         default: 68
-  schedule:
-    - cron: "*/5 * * * *"
 
 permissions:
   discussions: write
