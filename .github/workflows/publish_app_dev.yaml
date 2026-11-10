@@ -283,7 +283,17 @@ jobs:
       - name: Update apt-get
         run: sudo apt-get update
       - name: Install Dependencies
-        run: sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev libasound2-dev libmpv-dev mpv
+        run: sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev libasound2-dev libmpv-dev mpv patchelf
+      # 缓存/准备随包分发的 libmpv 运行库
+      - name: Cache libmpv runtime
+        uses: actions/cache@v4
+        with:
+          path: third_party/libmpv-linux/runtime
+          key: libmpv-linux-runtime-${{ hashFiles('scripts/linux/fetch_libmpv_runtime.py') }}
+          restore-keys: |
+            libmpv-linux-runtime-
+      - name: Prepare libmpv runtime
+        run: python3 scripts/linux/fetch_libmpv_runtime.py
       # 打开Linux Desktop支持
       - name: Enable Flutter Desktop
         run: flutter config --enable-linux-desktop
@@ -299,7 +309,20 @@ jobs:
       - name: Build Linux
         run: |
           cd simple_live_app
-          flutter_distributor package --platform linux --targets deb,zip --skip-clean
+          flutter_distributor package --platform linux --targets deb,zip --skip-clean \
+            --hook-pre 'bash "${{ github.workspace }}/scripts/linux/inject_libmpv_runtime.sh" "$BUILD_OUTPUT_DIRECTORY"'
+      # 确认 libmpv 已进入产物
+      - name: Verify bundled libmpv
+        run: |
+          set -e
+          for archive in simple_live_app/build/dist/*/*.zip; do
+            unzip -l "$archive" | grep -q 'lib/libmpv.so.2' \
+              || { echo "libmpv missing from $archive"; exit 1; }
+          done
+          for package in simple_live_app/build/dist/*/*.deb; do
+            dpkg-deb -c "$package" | grep -q 'libmpv.so.2' \
+              || { echo "libmpv missing from $package"; exit 1; }
+          done
       # 上传Linux包至Artifacts
       - name: Upload Linux APP to Artifacts
         uses: actions/upload-artifact@v4
